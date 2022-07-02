@@ -14,6 +14,8 @@ public class NoteScript : MonoBehaviour
 
 	public PhaseType phase;
 
+	public bool isWall = false;
+
 	private void Reset()
 	{
 		collider = GetComponent<Collider2D>();
@@ -25,46 +27,68 @@ public class NoteScript : MonoBehaviour
 			return nextNote;
 		var qSIC = Physics2D.queriesStartInColliders;
 		Physics2D.queriesStartInColliders = false;
-		nextNote = Physics2D.Raycast(transform.position, Vector2.right).transform?.GetComponent<NoteScript>();
-		Debug.Assert(nextNote != this);
-		if (nextNote != null)
-			return nextNote;
-		nextNote = Physics2D.BoxCast(transform.position, new Vector2(100, collider.bounds.size.y), 0, Vector2.down).transform?.GetComponent<NoteScript>();
+		//nextNote = Physics2D.Raycast(transform.position, Vector2.right).transform?.GetComponent<NoteScript>();
+		//Debug.Assert(nextNote != this);
+		//if (nextNote != null)
+		//	return nextNote;
+		var nextNotes = Physics2D.RaycastAll(transform.position, Vector2.right);
+		for (int i = 0; i < nextNotes.Length; i++)
+		{
+			nextNote = nextNotes[i].transform?.GetComponent<NoteScript>();
+			if (nextNote != this && nextNote != null && !nextNote.isWall)
+				return nextNote;
+			nextNote = null;
+		}
+		//nextNote = Physics2D.BoxCast(transform.position, new Vector2(100, collider.bounds.size.y), 0, Vector2.down).transform?.GetComponent<NoteScript>();
+		//Debug.Assert(nextNote != this);
+		////Debug.Assert(nextNote != null);
+		nextNotes = Physics2D.BoxCastAll(transform.position, new Vector2(100, collider.bounds.size.y), 0, Vector2.down);
+		for (int i = 0; i < nextNotes.Length; i++)
+		{
+			nextNote = nextNotes[i].transform?.GetComponent<NoteScript>();
+			if (nextNote != this && nextNote != null && !nextNote.isWall)
+				return nextNote;
+			nextNote = null;
+		}
 		Physics2D.queriesStartInColliders = qSIC;
-		Debug.Assert(nextNote != this);
-		//Debug.Assert(nextNote != null);
 		return nextNote;
 	}
 
 	public NoteScript FindNextHigherNote()
 	{
-		//if (nextNote != null)
-		//	return nextNote;
 		var qSIC = Physics2D.queriesStartInColliders;
 		Physics2D.queriesStartInColliders = false;
-		//nextNote = Physics2D.Raycast(transform.position, Vector2.right).transform?.GetComponent<NoteScript>();
+		//var nextNote = Physics2D.BoxCast(collider.bounds.max, new Vector2(collider.bounds.size.x * 10, collider.bounds.size.y), 0, Vector2.up).transform?.GetComponent<NoteScript>();
 		//Debug.Assert(nextNote != this);
-		//if (nextNote != null)
-		//	return nextNote;
-		var nextNote = Physics2D.BoxCast(collider.bounds.max, new Vector2(collider.bounds.size.x * 10, collider.bounds.size.y), 0, Vector2.up).transform?.GetComponent<NoteScript>();
+		var nextNotes = Physics2D.BoxCastAll(collider.bounds.max, new Vector2(collider.bounds.size.x * 10, collider.bounds.size.y), 0, Vector2.up);
+		NoteScript nextNote = null;
+		for (int i = 0; i < nextNotes.Length; i++)
+		{
+			nextNote = nextNotes[i].transform?.GetComponent<NoteScript>();
+			if (nextNote != this && nextNote != null && !nextNote.isWall)
+				return nextNote;
+			nextNote = null;
+		}
 		Physics2D.queriesStartInColliders = qSIC;
-		Debug.Assert(nextNote != this);
 		return nextNote;
 	}
 
 	public NoteScript FindNextLowerNote()
 	{
-		//if (nextNote != null)
-		//	return nextNote;
 		var qSIC = Physics2D.queriesStartInColliders;
 		Physics2D.queriesStartInColliders = false;
-		//nextNote = Physics2D.Raycast(transform.position, Vector2.right).transform?.GetComponent<NoteScript>();
+		//var nextNote = Physics2D.BoxCast(collider.bounds.min, new Vector2(collider.bounds.size.x * 10, collider.bounds.size.y), 0, Vector2.down).transform?.GetComponent<NoteScript>();
 		//Debug.Assert(nextNote != this);
-		//if (nextNote != null)
-		//	return nextNote;
-		var nextNote = Physics2D.BoxCast(collider.bounds.min, new Vector2(collider.bounds.size.x * 10, collider.bounds.size.y), 0, Vector2.down).transform?.GetComponent<NoteScript>();
+		var nextNotes = Physics2D.BoxCastAll(collider.bounds.min, new Vector2(collider.bounds.size.x * 10, collider.bounds.size.y), 0, Vector2.down);
+		NoteScript nextNote = null;
+		for (int i = 0; i < nextNotes.Length; i++)
+		{
+			nextNote = nextNotes[i].transform?.GetComponent<NoteScript>();
+			if (nextNote != this && nextNote != null && !nextNote.isWall)
+				return nextNote;
+			nextNote = null;
+		}
 		Physics2D.queriesStartInColliders = qSIC;
-		Debug.Assert(nextNote != this);
 		return nextNote;
 	}
 

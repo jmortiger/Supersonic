@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using TMPro;
 
 // TODO: Dynamic tiedye texture (RenderTexture/Texture2D?).
 [RequireComponent(/*typeof(SpriteRenderer), */typeof(Collider2D), typeof(Rigidbody2D), typeof(Phaser))]
@@ -27,6 +28,8 @@ public class PlayerScript : MonoBehaviour
 	public GameObject backgroundTop;
 
 	Phaser phaser;
+
+	public TMP_Text multiplierDisplay;
 	private void Reset()
 	{
 		spriteRenderer = GetComponent<SpriteRenderer>();
@@ -42,17 +45,18 @@ public class PlayerScript : MonoBehaviour
 	{
 		rigidbody ??= GetComponent<Rigidbody2D>();
 		scroller ??= FindObjectOfType<Scroller>();
+		multiplierDisplay ??= FindObjectOfType<TMP_Text>();
+		multiplierDisplay.text = $"x{multiplier}";
     }
 
 	public bool phasing { get => scroller.IsPhased; }
     void Update()
     {
-		//if (!Camera.current.pixelRect.Contains(GetComponent<Collider2D>().bounds.max))
-		//	SceneManager.LoadScene(SceneManager.GetActiveScene().name);
 		if (grounded && Input.GetButtonDown("Jump"))
 		{
 			ForceJump();
-			multiplier++;
+			UpdateMultiplier(1);
+			//multiplier++;
 		}
 		// Keep a background behind the player
 		backgroundTop.transform.position = new Vector3(transform.position.x, transform.position.y, backgroundTop.transform.position.z);
@@ -100,30 +104,19 @@ public class PlayerScript : MonoBehaviour
 	private bool grounded = false;
 	private void OnTriggerEnter2D(Collider2D collider)
 	{
-		//if (collider.GetComponent<NoteScript>() != null)
-		//	Debug.Log($"Note Entered at time {Time.timeSinceLevelLoad} & position {transform.position}");
 		Debug.Log($"Entered {collider.name} at time {Time.timeSinceLevelLoad} & position {transform.position}");
-		if (collider.tag.Contains("Death"))
+		if (collider.name == "BottomDeath")
+		{
+			ForceJump();
+			return;
+		}
+		if (collider.tag.Contains("Death") && collider.name != "BottomDeath")
 			SceneManager.LoadScene(SceneManager.GetActiveScene().name);
 		currNote = collider.GetComponent<NoteScript>();
 		OnTriggerStay2D(collider);
-		//if (!phasing && collider.GetComponent<SpriteRenderer>()?.material == scroller.unphasedMaterial ||
-		//	phasing && collider.GetComponent<SpriteRenderer>()?.material == scroller.phasedMaterial)
-		//	grounded = true;
-		//else
-		//	grounded = false;
 	}
 	private void OnTriggerStay2D(Collider2D collider)
 	{
-		//if (collider.GetComponent<NoteScript>() != null)
-		//	Debug.Log($"Note Entered at time {Time.timeSinceLevelLoad} & position {transform.position}");
-		//Debug.Log($"Entered {collider.name} at time {Time.timeSinceLevelLoad} & position {transform.position}");
-		//if (collider.tag.Contains("Death"))
-		//	SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-
-		//var sr = collider.GetComponent<SpriteRenderer>();
-		//if (!phasing && sr?.material == scroller.unphasedMaterial ||
-		//	phasing && sr?.material == scroller.phasedMaterial)
 		if ((!phasing && collider.gameObject.layer == LayerMask.NameToLayer("BeatmapUnphased")) ||
 			(phasing && collider.gameObject.layer == LayerMask.NameToLayer("BeatmapPhased")))
 			grounded = true;
@@ -140,16 +133,26 @@ public class PlayerScript : MonoBehaviour
 			// TODO: Change when there's Walls vs Notes
 			//if (!phasing && collider.GetComponent<SpriteRenderer>()?.material == scroller.unphasedMaterial ||
 			//	phasing && collider.GetComponent<SpriteRenderer>()?.material == scroller.phasedMaterial)
-				if ((!phasing && collider.gameObject.layer == LayerMask.NameToLayer("BeatmapUnphased")) ||
-					 (phasing && collider.gameObject.layer == LayerMask.NameToLayer("BeatmapPhased")))
+			if ((!phasing && collider.gameObject.layer == LayerMask.NameToLayer("BeatmapUnphased")) ||
+				 (phasing && collider.gameObject.layer == LayerMask.NameToLayer("BeatmapPhased")))
 			{
 				Debug.Log($"phasing: {phasing}; layer: {LayerMask.LayerToName(collider.gameObject.layer)}");
 				scroller.RegisterMistake();
-				multiplier = 0;
+				//multiplier = 0;
+				UpdateMultiplier(-multiplier);
 			}
 			//if (Vector3.Distance(GameObject.Find("Bottom Death").transform.position, collider.transform.position) < 12.5)
 			if (collider.GetComponent<NoteScript>().FindNextLowerNote() == null)
 				ForceJump();
 		}
+	}
+
+	private void UpdateMultiplier(int delta)
+	{
+		multiplier += delta;
+		if (multiplierDisplay != null)
+			multiplierDisplay.text = $"x{multiplier}";
+		else
+			Debug.LogWarning("No multiplierDisplay");
 	}
 }
