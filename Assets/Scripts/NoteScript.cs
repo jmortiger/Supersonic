@@ -2,13 +2,12 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
+//public float jumpSpeed = 6.924706f * 2;public float failJumpSpeed = 6.924706f;
 [RequireComponent(typeof(Collider2D))]
 public class NoteScript : MonoBehaviour
 {
-	public float jumpSpeed = 6.924706f * 2;
-	public float failJumpSpeed = 6.924706f;
-
 	public NoteScript nextNote;
+	public NoteScript nextNoteHigher;
 
 	public new Collider2D collider;
 
@@ -46,6 +45,7 @@ public class NoteScript : MonoBehaviour
 		for (int i = 0; i < nextNotes.Length; i++)
 		{
 			nextNote = nextNotes[i].transform?.GetComponent<NoteScript>();
+			Debug.Assert(nextNote != this);
 			if (nextNote != this && nextNote != null && !nextNote.isWall)
 				return nextNote;
 			nextNote = null;
@@ -56,6 +56,8 @@ public class NoteScript : MonoBehaviour
 
 	public NoteScript FindNextHigherNote()
 	{
+		if (nextNoteHigher != null)
+			return nextNoteHigher;
 		var qSIC = Physics2D.queriesStartInColliders;
 		Physics2D.queriesStartInColliders = false;
 		//var nextNote = Physics2D.BoxCast(collider.bounds.max, new Vector2(collider.bounds.size.x * 10, collider.bounds.size.y), 0, Vector2.up).transform?.GetComponent<NoteScript>();
@@ -65,6 +67,7 @@ public class NoteScript : MonoBehaviour
 		for (int i = 0; i < nextNotes.Length; i++)
 		{
 			nextNote = nextNotes[i].transform?.GetComponent<NoteScript>();
+			Debug.Assert(nextNote != this && nextNote.name != this.name);
 			if (nextNote != this && nextNote != null && !nextNote.isWall)
 				return nextNote;
 			nextNote = null;

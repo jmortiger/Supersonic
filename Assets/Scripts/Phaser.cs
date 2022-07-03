@@ -36,9 +36,12 @@ public class Phaser : MonoBehaviour
 
 	private void OnPhaseChange(object sender, System.EventArgs e)
 	{
-		sr.material = (scroller.CurrentPhaseType == phaseType) ?
-			scroller.unphasedMaterial :
-			scroller.phasedMaterial;
+		//sr.material = (scroller.CurrentPhaseType == phaseType) ?
+		//	scroller.unphasedMaterial :
+		//	scroller.phasedMaterial;
+		sr.sprite = (scroller.CurrentPhaseType == phaseType) ?
+			scroller.unphasedNoteSprite :
+			scroller.phasedNoteSprite;
 		//Debug.Log($"CurrPhaseType {scroller.CurrentPhaseType} & PhaseType {phaseType}");
 	}
 

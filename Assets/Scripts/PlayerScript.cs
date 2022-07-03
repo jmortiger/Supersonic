@@ -8,14 +8,6 @@ using TMPro;
 [RequireComponent(/*typeof(SpriteRenderer), */typeof(Collider2D), typeof(Rigidbody2D), typeof(Phaser))]
 public class PlayerScript : MonoBehaviour
 {
-	//private Sprite sprite;
-
-	//[SerializeField]
-	//private RenderTexture texture;
-
-	//[SerializeField]
-	//private Material playerMaterial;
-
 	private SpriteRenderer spriteRenderer;
 	private new Collider2D collider;
 	public Collider2D Collider { get => collider; }
@@ -37,7 +29,6 @@ public class PlayerScript : MonoBehaviour
 		rigidbody = GetComponent<Rigidbody2D>();
 		scroller = FindObjectOfType<Scroller>();
 
-		//texture = new RenderTexture(256, 256, 32, RenderTextureFormat.ARGBFloat);
 		phaser = GetComponent<Phaser>();
 	}
 	// Start is called before the first frame update
@@ -54,16 +45,16 @@ public class PlayerScript : MonoBehaviour
     {
 		if (grounded && Input.GetButtonDown("Jump"))
 		{
+			Debug.Log($"Jump: {Input.GetButtonDown("Jump")}");
 			ForceJump();
 			UpdateMultiplier(1);
-			//multiplier++;
 		}
 		// Keep a background behind the player
 		backgroundTop.transform.position = new Vector3(transform.position.x, transform.position.y, backgroundTop.transform.position.z);
     }
 
 	private int multiplier = 0;
-	private int threshold = 20;
+	private int threshold = 2;
 	private NoteScript currNote;
 	/// <summary>
 	/// 
@@ -71,34 +62,55 @@ public class PlayerScript : MonoBehaviour
 	public void ForceJump()
 	{
 		NoteScript nextNote = null;
-		if (Input.GetButton("Fire3")/* && multiplier >= threshold*/)
-			//Debug.Log("Fire3");
+		if (Input.GetButton("JumpHigher")/* && multiplier >= threshold*/)
+		{
+			Debug.Log("FindNextHigherNote");
 			nextNote = currNote.FindNextHigherNote();
+			Debug.Assert(nextNote != currNote, $"nextNote == currNote");
+		}
 
 		if (nextNote == null)
+		{
+			Debug.Log("FindNextNote");
 			nextNote = currNote.FindNextNote();
-		//Debug.Log($"NextNote.pos: {nextNote?.transform?.position}");
+			Debug.Assert(nextNote != currNote, $"nextNote == currNote");
+		}
+
+		if (nextNote == null)
+		{
+			Debug.Log("FindNextLowerNote");
+			nextNote = currNote.FindNextLowerNote();
+			Debug.Assert(nextNote != currNote, $"nextNote == currNote");
+		}
+
+		var rbv = rigidbody.velocity;
 		// Dynamically determine jump speed
 		if (nextNote == null)
 		{
 			Debug.LogWarning("No New Note Found");
-			var rbv = rigidbody.velocity;
 			rbv.y = 20;
-			rigidbody.velocity = rbv;
-			grounded = false;
 		}
 		else
 		{
 			Debug.Log($"Target: {nextNote?.name}");
-			var desiredPosition = new Vector2(nextNote.transform.position.x, nextNote.collider.bounds.max.y);
+			var desiredPosition = new Vector2(nextNote.transform.position/*collider.bounds.min*/.x, nextNote.collider.bounds.max.y);
 			var dT = MyPhysicsHelper.GetTravelTime(desiredPosition.x - transform.position.x, Scroller.SCROLL_SPEED);
-			var desiredVelocity = MyPhysicsHelper.GetDesiredVelocity(desiredPosition.y - transform.position.y, dT, Physics2D.gravity.y);
+			var desiredVelocity = MyPhysicsHelper.GetDesiredVelocityFromDistance(desiredPosition.y - transform.position.y, dT, Physics2D.gravity.y);
+			//if (MyPhysicsHelper.GetVelocityFinalComponent(vIComp: desiredVelocity, accelComp: Physics2D.gravity.y, deltaDComp: desiredPosition.y - transform.position.y) > float.Epsilon)
+			if (MyPhysicsHelper.GetVelocityFinalComponentByTime(vIComp: desiredVelocity, accelComp: Physics2D.gravity.y, deltaT: dT) > float.Epsilon)
+			{
+				Debug.Log($"vI of {desiredVelocity} will overshoot");
+				desiredVelocity = MyPhysicsHelper.GetInitialVelocityTrial(deltaDComp: desiredPosition.y - transform.position.y, deltaT: dT);
+			}
+			//var desiredVelocity = MyPhysicsHelper.GetDesiredVelocity(accelComp: Physics2D.gravity.y, deltaT: dT);
+			//var desiredVelocity = MyPhysicsHelper.GetInitialVelocityComponentFromDistance(accelComp: Physics2D.gravity.y, deltaDComp: desiredPosition.y - transform.position.y);
+			//var desiredVelocity = MyPhysicsHelper.GetInitialVelocityTrial(deltaDComp: desiredPosition.y - transform.position.y, deltaT: dT);
+			Debug.Log($"Desired Velocity = {desiredVelocity}");
 
-			var rbv = rigidbody.velocity;
 			rbv.y = desiredVelocity;
-			rigidbody.velocity = rbv;
-			grounded = false;
 		}
+		rigidbody.velocity = rbv;
+		grounded = false;
 	}
 
 	private bool grounded = false;
@@ -122,7 +134,6 @@ public class PlayerScript : MonoBehaviour
 			grounded = true;
 		else
 			grounded = false;
-		//Debug.Assert(sr?.material == scroller.unphasedMaterial || sr?.material == scroller.phasedMaterial, "sr?.material is weird");
 		//currNote = collider.GetComponent<NoteScript>();
 	}
 	private void OnTriggerExit2D(Collider2D collider)
@@ -131,14 +142,11 @@ public class PlayerScript : MonoBehaviour
 		if ((collider.gameObject.layer == LayerMask.NameToLayer("Beatmap") || collider.gameObject.layer == LayerMask.NameToLayer("BeatmapUnphased") || collider.gameObject.layer == LayerMask.NameToLayer("BeatmapPhased")) && rigidbody.velocity.y < 0)
 		{
 			// TODO: Change when there's Walls vs Notes
-			//if (!phasing && collider.GetComponent<SpriteRenderer>()?.material == scroller.unphasedMaterial ||
-			//	phasing && collider.GetComponent<SpriteRenderer>()?.material == scroller.phasedMaterial)
 			if ((!phasing && collider.gameObject.layer == LayerMask.NameToLayer("BeatmapUnphased")) ||
 				 (phasing && collider.gameObject.layer == LayerMask.NameToLayer("BeatmapPhased")))
 			{
 				Debug.Log($"phasing: {phasing}; layer: {LayerMask.LayerToName(collider.gameObject.layer)}");
 				scroller.RegisterMistake();
-				//multiplier = 0;
 				UpdateMultiplier(-multiplier);
 			}
 			//if (Vector3.Distance(GameObject.Find("Bottom Death").transform.position, collider.transform.position) < 12.5)

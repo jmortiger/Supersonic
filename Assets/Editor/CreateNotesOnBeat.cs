@@ -28,6 +28,8 @@ public class CreateNotesOnBeat : ScriptableWizard
 	public Vector2 colliderOffset = new Vector2(0, .25f);
 	public Vector2 colliderSize = new Vector2(1, 1.5f);
 	public Sprite sprite;
+	public bool isWall = false;
+	public bool isPhased = false;
 	void OnWizardUpdate()
 	{
 		helpString = "Enter info.";
@@ -65,9 +67,8 @@ public class CreateNotesOnBeat : ScriptableWizard
 		for (int i = 0; i < numberOfNotesToGenerate; i++)
 		{
 			var curr = new GameObject($"{i} - t={Scroller.FIRST_BEAT_TIME + i * Scroller.SECONDS_PER_BEAT}s");
-			curr.layer = LayerMask.NameToLayer("Beatmap");
-			//Debug.Log($"Beatmap Layer Index: {LayerMask.NameToLayer("Beatmap")}");
-			curr.tag = "Beatmap";
+			curr.layer = LayerMask.NameToLayer((isPhased) ? "BeatmapPhased" : "BeatmapUnphased");
+			curr.tag = (isPhased) ? "BeatmapPhased" : "BeatmapUnphased";
 			curr.transform.parent = parentGO.transform;
 			curr.transform.localPosition = new Vector3(i * spaceBetweenNotes, 0 , 0);
 
@@ -79,6 +80,7 @@ public class CreateNotesOnBeat : ScriptableWizard
 			var note = curr.AddComponent<NoteScript>();
 			notes[i] = note;
 			note.collider = box;
+			note.isWall = isWall;
 			if (i > 0)
 				notes[i - 1].nextNote = note;
 

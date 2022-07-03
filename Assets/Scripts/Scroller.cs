@@ -53,6 +53,10 @@ public class Scroller : MonoBehaviour
 	public event EventHandler PhaseChange;
 	public Material phasedMaterial;
 	public Material unphasedMaterial;
+	public Sprite phasedNoteSprite;
+	public Sprite unphasedNoteSprite;
+	public Sprite phasedWallSprite;
+	public Sprite unphasedWallSprite;
 	private void Reset()
 	{
 		camera = GetComponent<Camera>();
@@ -80,21 +84,13 @@ public class Scroller : MonoBehaviour
 	{
 		if (Input.GetButtonDown("Debug Reset"))
 			SceneManager.LoadScene(SceneManager.GetActiveScene().name);
-		//if (Input.GetButtonDown("Fire3") || 
-		//	Input.GetButtonUp("Fire3") ||
-		//	Input.GetButtonDown("Phase") ||
-		//	Input.GetButtonUp("Phase"))
-		//{
-		//	IsPhased = !IsPhased;
-		//	PhaseChange?.Invoke(this, new EventArgs());
-		//}
-		if ((Input.GetButton("Fire3") || 
+		if ((/*Input.GetButton("Fire3") || */
 		Input.GetButton("Phase")) && !IsPhased)
 		{
 			IsPhased = true;
 			PhaseChange?.Invoke(this, new EventArgs());
 		}
-		if ((!Input.GetButton("Fire3") &&
+		if ((/*!Input.GetButton("Fire3") &&*/
 		!Input.GetButton("Phase")) && IsPhased)
 		{
 			IsPhased = false;
